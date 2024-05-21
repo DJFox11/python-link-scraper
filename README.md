@@ -17,5 +17,5 @@ Ensure you have Python installed on your system. This script utilises the follow
 1. Download the latest release from [Releases](https://github.com/DJFox11/python-link-scraper/releases/tag/master).
 2. Extract and downloaded .zip file and open the .exe titled `Link_Scraper.exe`.
 3. Enter the website from which you would like to scrape the links and click the `Scrape Links` button.
-   - When entering the URL, make sure to include `https://` or `http://` respectively.
-5. A .csv file will soon be created containing the links from the specified website.
+    1. When entering the URL, make sure to include `https://` or `http://` respectively.
+4. A .csv file will soon be created containing the links from the specified website.
