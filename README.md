@@ -24,7 +24,7 @@ Ensure you have Python installed on your system. This script utilises the follow
 
 1. **Error Handling**
     - Enchance error handling to cover network errors and invalid URL cases.
-2. **hreading**
+2. **Threading**
     - Implement threading to prevent GUI freezing during scraping.
 3. **Progress Indicator**
     - Add a progress indicator to show the scraping progress.
