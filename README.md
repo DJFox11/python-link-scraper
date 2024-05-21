@@ -1,4 +1,4 @@
-# Web Scraping Documentation
+# Link Web Scraper
 
 This Python script allows you to scrape links from a webpage and save them to a CSV file.
 
