@@ -12,14 +12,10 @@ Ensure you have Python installed on your system. This script utilises the follow
 
 `pip install requests beautifulsoup4 tqdm`
 
-These libraries are commonly included with Python installations.
-
 ## Usage
 
-1. Clone or download the Python script `web_scraping.py`.
-2. Open a terminal or command prompt.
-3. Navigate to the directory containing `web_scraping.py`.
-4. Run the script by executing `python web_scraping.py`.
-5. Enter the URL of the webpage you want to scrape links from when prompted.
-6. Wait for the scraping process to complete.
-7. The script will save the links to a CSV file with a filename based on the URL.
+1. Download the latest release from [Releases](https://github.com/DJFox11/python-link-scraper/releases/tag/master).
+2. Extract and downloaded .zip file and open the .exe titled `Link_Scraper.exe`.
+3. Enter the website from which you would like to scrape the links and click the `Scrape Links` button.
+   - When entering the URL, make sure to include `https://` or `http://` respectively.
+5. A .csv file will soon be created containing the links from the specified website.
