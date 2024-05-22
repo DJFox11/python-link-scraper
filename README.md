@@ -21,6 +21,8 @@ Ensure you have Python installed on your system. This script utilises the follow
     - When entering the URL, make sure to include `https://` or `http://` respectively.
 4. You can either choose to create a TXT or CSV file with the scraped links.
 
+- The EXE was compiled using Auto Py to EXE.
+
 ## Planned Features
 
 - [x] Error Handling
