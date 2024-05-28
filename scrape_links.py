@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
-import threading
 import time
 import os
 import re
@@ -17,8 +16,7 @@ def scrape_links(url):
 
     soup = BeautifulSoup(response.content, 'html.parser')
     a_tags = soup.find_all('a')
-    links = [a.get('href') for a in a_tags if a.get('href')]
-    return links
+    return [a.get('href') for a in a_tags if a.get('href')]
 
 def save_links_to_csv(links, filename):
     with open(filename, mode='w', newline='') as file:
@@ -32,14 +30,13 @@ def save_links_to_txt(links, filename):
         for link in links:
             file.write(link + '\n')
 
-def sanitize_filename(url):
-    return re.sub(r'[^a-zA-Z0-9]', '_', url)
-
-def start_scraping(sender, app_data):
+def start_scraping():
     url = dpg.get_value("url_input")
     if not url.startswith("http://") and not url.startswith("https://"):
-        dpg.configure_item("status_label", default_value="Error: Invalid URL. Please enter a valid URL starting with 'http://' or 'https://'.")
-        return
+        if ":" in url:
+            dpg.configure_item("status_label", default_value="Error: Invalid URL. Please enter a valid URL starting with 'http://' or 'https://'.")
+            return
+        url = "http://" + url
 
     try:
         dpg.configure_item("status_label", default_value="Scraping...")
@@ -47,7 +44,7 @@ def start_scraping(sender, app_data):
         links = scrape_links(url)
         dpg.configure_item("status_label", default_value="Scraping complete.")
 
-        sanitized_url = sanitize_filename(url)
+        sanitized_url = re.sub(r'[^a-zA-Z0-9]', '_', url)
         export_format = dpg.get_value("format_selector")
 
         if export_format == "CSV":
@@ -78,7 +75,7 @@ def loading_animation():
             dpg.configure_item("loading_indicator", default_value=state)
             time.sleep(0.2)
 
-def clear_input(sender, app_data):
+def clear_input():
     dpg.set_value("url_input", "")
     dpg.configure_item("status_label", default_value="")
 
