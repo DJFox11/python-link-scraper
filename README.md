@@ -11,7 +11,9 @@ Ensure you have Python installed on your system. This script utilises the follow
 - `itertools`: For creating iterators
 - `dear pygui`: For creating the UI
 
-`pip install requests beautifulsoup4 tqdm dearpygui`
+```
+pip install requests beautifulsoup4 tqdm dearpygui
+```
 
 ## Usage
 
