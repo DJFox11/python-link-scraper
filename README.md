@@ -1,7 +1,5 @@
 # Link Web Scraper
 
-This Python script allows you to scrape links from a webpage and save them to either a TXT or CSV file.
-
 ## Installation
 
 Ensure you have Python installed on your system. This script utilises the following Python libraries:
