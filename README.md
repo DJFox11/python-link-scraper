@@ -26,6 +26,7 @@ pip install requests beautifulsoup4 tqdm dearpygui
 ## Planned Features
 
 - [x] Error Handling
+- [ ] Image support (Working on right now!)
 - [x] Threading
 - [ ] Progress Indicator
 - [ ] Better File Management
