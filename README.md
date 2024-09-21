@@ -7,10 +7,10 @@ Ensure you have Python installed on your system. This script utilises the follow
 - `requests`: For making HTTP requests
 - `beautifulsoup4`: For parsing HTML
 - `itertools`: For creating iterators
-- `dear pygui`: For creating the UI
+- `ttk`: For creating the UI
 
 ```
-pip install requests beautifulsoup4 tqdm dearpygui
+pip install requests beautifulsoup4 tqdm
 ```
 
 ## Planned Features
