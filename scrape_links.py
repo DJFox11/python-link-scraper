@@ -1,106 +1,175 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
-import time
 import os
 import re
-import dearpygui.dearpygui as dpg
+import threading
+import tkinter as tk
+from tkinter import ttk
+from tkinter import messagebox
+from tkinter import filedialog
+from urllib.parse import urljoin
 
-def scrape_links(url):
-    response = requests.get(url)
-    if response.status_code != 200:
-        if response.status_code == 403:
-            raise Exception("Access to the website is forbidden (403 error).")
-        else:
-            raise Exception(f"Failed to retrieve the page. Status code: {response.status_code}")
+# LinkScraper class to handle the web scraping functionality
+class LinkScraper:
+    @staticmethod
+    def scrape_links(url):
+        response = requests.get(url)
+        if response.status_code != 200:
+            if response.status_code == 403:
+                raise Exception("Access to the website is forbidden (403 error).")
+            else:
+                raise Exception(f"Failed to retrieve the page. Status code: {response.status_code}")
+        
+        soup = BeautifulSoup(response.content, 'html.parser')
+        a_tags = soup.find_all('a')
+        links = []
+        for a in a_tags:
+            href = a.get('href')
+            if href:
+                full_url = urljoin(url, href)
+                links.append(full_url)
+        return links
 
-    soup = BeautifulSoup(response.content, 'html.parser')
-    a_tags = soup.find_all('a')
-    return [a.get('href') for a in a_tags if a.get('href')]
+    @staticmethod
+    def save_links_to_csv(links, filename):
+        with open(filename, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Link'])
+            for link in links:
+                writer.writerow([link])
 
-def save_links_to_csv(links, filename):
-    with open(filename, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['Link'])
-        for link in links:
-            writer.writerow([link])
+    @staticmethod
+    def save_links_to_txt(links, filename):
+        with open(filename, 'w', encoding='utf-8') as file:
+            for link in links:
+                file.write(link + '\n')
 
-def save_links_to_txt(links, filename):
-    with open(filename, 'w') as file:
-        for link in links:
-            file.write(link + '\n')
+# LinkScraperApp class to handle the GUI and user interactions
+class LinkScraperApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Link Scraper")
+        self.geometry("420x350")
+        self.resizable(False, False)
 
-def start_scraping():
-    url = dpg.get_value("url_input")
-    if not url.startswith("http://") and not url.startswith("https://"):
-        if ":" in url:
-            dpg.configure_item("status_label", default_value="Error: Invalid URL. Please enter a valid URL starting with 'http://' or 'https://'.")
-            return
-        url = "http://" + url
+        # Load the Azure theme
+        try:
+            self.tk.call("source", "azure.tcl")
+            self.tk.call("set_theme", "dark")  # You can set 'light' or 'dark'
+        except tk.TclError as e:
+            print(f"Error loading Azure theme: {e}")
+            # Fallback to default theme if the Azure theme fails to load
+            self.style = ttk.Style(self)
+            self.style.theme_use('clam')
 
-    try:
-        dpg.configure_item("status_label", default_value="Scraping...")
-        dpg.configure_item("loading_indicator", show=True)
-        links = scrape_links(url)
-        dpg.configure_item("status_label", default_value="Scraping complete.")
+        self.create_widgets()
+    def create_widgets(self):
+        # URL input
+        url_label = ttk.Label(self, text="Enter the URL to scrape links from:")
+        url_label.pack(pady=(10, 0))
+
+        url_frame = ttk.Frame(self)
+        url_frame.pack(pady=(5, 0))
+        self.url_var = tk.StringVar()
+        url_entry = ttk.Entry(url_frame, textvariable=self.url_var, width=40)
+        url_entry.pack(side=tk.LEFT, padx=(0, 5))
+        url_entry.focus()
+        clear_button = ttk.Button(url_frame, text="Clear", command=self.clear_input)
+        clear_button.pack(side=tk.LEFT)
+
+        # Export format selection
+        format_label = ttk.Label(self, text="Select export format:")
+        format_label.pack(pady=(10, 0))
+        self.format_var = tk.StringVar(value='TXT')
+        format_combo = ttk.Combobox(self, textvariable=self.format_var, values=['TXT', 'CSV'], state='readonly')
+        format_combo.pack(pady=(5, 0))
+
+        # Overwrite checkbox
+        self.overwrite_var = tk.BooleanVar()
+        overwrite_check = ttk.Checkbutton(self, text="Overwrite if file exists", variable=self.overwrite_var)
+        overwrite_check.pack(pady=(5, 0))
+
+        # Scrape Links button
+        scrape_button = ttk.Button(self, text="Scrape Links", command=self.start_scraping)
+        scrape_button.pack(pady=(10, 0))
+
+        # Status label
+        self.status_var = tk.StringVar()
+        status_label = ttk.Label(self, textvariable=self.status_var, wraplength=350)
+        status_label.pack(pady=(10, 0))
+
+        # Loading indicator
+        self.progress_bar = ttk.Progressbar(self, mode='indeterminate')
+        self.progress_bar.pack(pady=(10, 0))
+        self.progress_bar.stop()
+
+        # Created by label
+        created_by_label = ttk.Label(self, text="Created by DJ_Fox11")
+        created_by_label.pack(side=tk.BOTTOM, pady=(0, 10))
+
+    def clear_input(self):
+        self.url_var.set("")
+        self.status_var.set("")
+
+    def start_scraping(self):
+        url = self.url_var.get().strip()
+        if not url.startswith("http://") and not url.startswith("https://"):
+            if ":" in url:
+                self.status_var.set(
+                    "Error: Invalid URL. Please enter a valid URL starting with 'http://' or 'https://'.")
+                return
+            url = "http://" + url
+
+        self.status_var.set("Scraping...")
+        self.progress_bar.start()
+
+        # Start scraping in a separate thread
+        threading.Thread(target=self.scrape_and_save_links, args=(url,), daemon=True).start()
+
+    def scrape_and_save_links(self, url):
+        try:
+            links = LinkScraper.scrape_links(url)
+            # Schedule the save and GUI updates in the main thread
+            self.after(0, self.save_and_update, links, url)
+        except Exception as e:
+            self.after(0, self.scrape_failed, str(e))
+
+    def save_and_update(self, links, url):
+        self.progress_bar.stop()
 
         sanitized_url = re.sub(r'[^a-zA-Z0-9]', '_', url)
-        export_format = dpg.get_value("format_selector")
+        export_format = self.format_var.get()
 
         if export_format == "CSV":
-            filename = f"{sanitized_url}.csv"
-            save_function = save_links_to_csv
+            default_filename = f"{sanitized_url}.csv"
+            filetypes = [('CSV files', '*.csv')]
+            save_function = LinkScraper.save_links_to_csv
         else:
-            filename = f"{sanitized_url}.txt"
-            save_function = save_links_to_txt
+            default_filename = f"{sanitized_url}.txt"
+            filetypes = [('Text files', '*.txt')]
+            save_function = LinkScraper.save_links_to_txt
 
-        if os.path.exists(filename):
-            overwrite = dpg.get_value("overwrite_checkbox")
-            if not overwrite:
-                dpg.configure_item("status_label", default_value="File not saved: File already exists.")
-                dpg.configure_item("loading_indicator", show=False)
-                return
+        # Ask the user where to save the file
+        filename = filedialog.asksaveasfilename(
+            defaultextension=filetypes[0][1], filetypes=filetypes, initialfile=default_filename)
 
-        save_function(links, filename)
-        dpg.configure_item("status_label", default_value=f"Saved {len(links)} links to {filename}")
-    except Exception as e:
-        dpg.configure_item("status_label", default_value=f"Error: {str(e)}")
-    finally:
-        dpg.configure_item("loading_indicator", show=False)
+        if filename:
+            if os.path.exists(filename):
+                overwrite = self.overwrite_var.get()
+                if not overwrite:
+                    self.status_var.set("File not saved: File already exists.")
+                    return
 
-def loading_animation():
-    spinner_states = ['/', '-', '\\', '|']
-    while dpg.get_item_configuration("loading_indicator")['show']:
-        for state in spinner_states:
-            dpg.configure_item("loading_indicator", default_value=state)
-            time.sleep(0.2)
+            save_function(links, filename)
+            self.status_var.set(f"Saved {len(links)} links to {filename}")
+        else:
+            self.status_var.set("File save cancelled.")
 
-def clear_input():
-    dpg.set_value("url_input", "")
-    dpg.configure_item("status_label", default_value="")
+    def scrape_failed(self, error_message):
+        self.progress_bar.stop()
+        self.status_var.set(f"Error: {error_message}")
 
-# GUI setup
-dpg.create_context()
-
-with dpg.window(label="Link Scraper", width=420, height=260, no_close=True):
-    dpg.add_text("Enter the URL to scrape links from:")
-    with dpg.group(horizontal=True):
-        dpg.add_input_text(tag="url_input", width=250)
-        dpg.add_button(label="Clear", callback=clear_input)
-    dpg.add_text("Select export format:")
-    dpg.add_combo(['TXT', 'CSV'], default_value='TXT', tag="format_selector")
-    dpg.add_checkbox(label="Overwrite if file exists", tag="overwrite_checkbox")
-    dpg.add_button(label="Scrape Links", callback=start_scraping)
-    dpg.add_text("", tag="status_label", wrap=350)
-    with dpg.group(horizontal=True):
-        dpg.add_text("", tag="scraping_text")
-        dpg.add_text("", tag="loading_indicator")
-    dpg.configure_item("loading_indicator", show=False)
-    dpg.add_spacer(height=5)
-    dpg.add_text("Created by DJ_Fox11", pos=(10, 230))
-
-dpg.create_viewport(title='Link Scraper', width=420, height=300)
-dpg.setup_dearpygui()
-dpg.show_viewport()
-dpg.start_dearpygui()
-dpg.destroy_context()
+if __name__ == "__main__":
+    app = LinkScraperApp()
+    app.mainloop()
