@@ -7,11 +7,13 @@ Ensure you have Python installed on your system. This script utilises the follow
 - `requests`: For making HTTP requests
 - `beautifulsoup4`: For parsing HTML
 - `itertools`: For creating iterators
-- `ttk`: For creating the UI
 
-```
+```python
 pip install requests beautifulsoup4 tqdm
 ```
+
+## Usage
+Clone the repository using `https://github.com/DJFox11/python-link-scraper.git`, run `scrape_links.py` to use the tool.
 
 ## Planned Features
 
